@@ -4,7 +4,7 @@
 Example consumer based on esp32: https://github.com/swalker2000/duster_esp32_example
 To compile, you need to create a Secret.h file in the sketch's main directory with the following contents:
 ```c++
-#define SSID          "MY_SSID"
+#define SECRET_WIFI_SSID "MY_SSID"
 #define WIFI_PASS     "MY_WIFI_PASS"
 #define URL           "MQTT_URL"
 #define PORT          8883

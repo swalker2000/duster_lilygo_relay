@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
+#ifndef COMMUTATOR_H
+#define COMMUTATOR_H
 #define rele1 21
 #define rele2 19
 #define rele3 18
@@ -61,3 +63,4 @@ class Commutator
         int myPins[4] = {rele1, rele2, rele3, rele4};
         Preferences prefs_;
 };
+#endif

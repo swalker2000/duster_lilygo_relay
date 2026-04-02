@@ -1,0 +1,42 @@
+# Секреты (шаблон: Secret.h.example в репозитории, Secret.h — локально)
+Secret.h
+
+# Сборка Arduino CLI / IDE
+build/
+*.hex
+*.elf
+*.bin
+*.map
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+libdeps/
+.clang_complete
+.ccls
+
+# ESP-IDF (если появится отдельный компонент)
+sdkconfig
+sdkconfig.old
+dependencies.lock
+managed_components/
+
+# CMake
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# Редакторы и ОС
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+.vscode/
+.idea/
+
+# Логи и временные файлы
+*.log
+*.tmp

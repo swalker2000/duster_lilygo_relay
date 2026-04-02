@@ -22,7 +22,7 @@ Topic: producer/request/device123
         "believerGuarantee":"RECEIPT_CONFIRMATION",
         "command":"relayWrite",
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "pinValue" : true
         }
   }
@@ -38,7 +38,7 @@ Topic: (consumer/request/device123)
         "command":"relayWrite",
         "currentTimestamp":1772021717684,
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "pinValue" : true
         }
    }
@@ -54,7 +54,7 @@ Topic: producer/request/device123
         "believerGuarantee":"RECEIPT_CONFIRMATION",
         "command":"blink",
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "period" : 2000,
             "count" : 4
         }
@@ -71,7 +71,7 @@ Topic: (consumer/request/device123)
         "command":"blink",
         "currentTimestamp":1772021717684,
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "period" : 2000,
             "count" : 4
         }

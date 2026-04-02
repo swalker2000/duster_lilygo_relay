@@ -22,7 +22,7 @@
         "believerGuarantee":"RECEIPT_CONFIRMATION",
         "command":"relayWrite",
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "pinValue" : true
         }
   }
@@ -54,7 +54,7 @@
         "believerGuarantee":"RECEIPT_CONFIRMATION",
         "command":"blink",
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "period" : 2000,
             "count" : 4
         }
@@ -71,7 +71,7 @@
         "command":"blink",
         "currentTimestamp":1772021717684,
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "period" : 2000,
             "count" : 4
         }

@@ -127,10 +127,13 @@ inline void MqttCommandHandler::dispatchCommand(DynamicJsonDocument &doc, long i
   if (!command) {
     return;
   }
-  if (strcmp(command, "relaylWrite") == 0) {
+  if (strcmp(command, "relayWrite") == 0) {
     handleRelayWrite(doc["data"].as<JsonObject>());
   } else if (strcmp(command, "blink") == 0) {
     handleBlink(id, doc["data"].as<JsonObject>());
+  }else
+  {
+    Serial.println(F("Command not found!"));
   }
 }
 

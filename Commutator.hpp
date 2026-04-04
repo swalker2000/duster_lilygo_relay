@@ -18,7 +18,20 @@ class Commutator
             for (size_t i = 0; i < n; i++) {
                 pinMode(myPins[i], OUTPUT);
             }
-            prefs_.begin("relay", false);
+        }
+
+        /** NVS и восстановление реле — только после старта Arduino (вызов из setup). */
+        void begin()
+        {
+            if (prefsStarted_) {
+                return;
+            }
+            prefsStarted_ = prefs_.begin("relay", false);
+            if (!prefsStarted_) {
+                Serial.println(F("Commutator: NVS namespace \"relay\" не открыт"));
+                return;
+            }
+            const size_t n = relayCount();
             for (size_t i = 0; i < n; i++) {
                 bool v = prefs_.getBool(nvsKey(i), false);
                 digitalWrite(myPins[i], v);
@@ -28,7 +41,9 @@ class Commutator
         void write(int relayNumber, bool value)
         {
             digitalWrite(myPins[relayNumber - 1], value);
-            prefs_.putBool(nvsKey(static_cast<size_t>(relayNumber - 1)), value);
+            if (prefsStarted_) {
+                prefs_.putBool(nvsKey(static_cast<size_t>(relayNumber - 1)), value);
+            }
         }
 
         void blink(int relayNumber, int period, int count)
@@ -62,5 +77,6 @@ class Commutator
 
         int myPins[4] = {rele1, rele2, rele3, rele4};
         Preferences prefs_;
+        bool prefsStarted_{false};
 };
 #endif

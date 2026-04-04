@@ -16,6 +16,7 @@ NetSettings netSettings;
 
 void setup() {
   Serial.begin(115200);
+  commutator->begin();
   delay(1000);
   Serial.println("\nESP32 MQTT JSON Example (PubSubClient + digitalWrite)");
 

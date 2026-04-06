@@ -6,7 +6,7 @@
 #include "NetSettings.hpp"
 #include "MqttCommandHandler.hpp"
 
-const char deviceId[] = "device1";
+const char deviceId[] = "esp32-relay-1";
 
 WiFiClientSecure net;
 PubSubClient client(net);

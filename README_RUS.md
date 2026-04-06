@@ -38,7 +38,7 @@
         "command":"relayWrite",
         "currentTimestamp":1772021717684,
         "data": {
-            "relayNumber": 2,
+            "pinNumber": 2,
             "pinValue" : true
         }
    }

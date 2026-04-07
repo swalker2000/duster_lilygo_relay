@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClient.h>
 #include <Preferences.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -31,6 +32,7 @@ public:
     }
     strlcpy(mqttUser_, prefs_.getString("muser", MQTT_USERNAME).c_str(), sizeof(mqttUser_));
     strlcpy(mqttPass_, prefs_.getString("mpass", MQTT_PASS).c_str(), sizeof(mqttPass_));
+    mqttTls_ = prefs_.getBool("mtls", SECRET_MQTT_TLS != 0);
   }
 
   const char *wifiSsid() const { return wifiSsid_; }
@@ -39,6 +41,7 @@ public:
   uint16_t mqttPort() const { return mqttPort_; }
   const char *mqttUser() const { return mqttUser_; }
   const char *mqttPass() const { return mqttPass_; }
+  bool mqttTls() const { return mqttTls_; }
 
   void reconnectWiFi() {
     WiFi.disconnect(true);
@@ -59,20 +62,27 @@ public:
     }
   }
 
-  void reconnectMqtt(WiFiClientSecure &net, PubSubClient &client, const char *deviceId,
-                     void (*mqttCallback)(char *, byte *, unsigned int)) {
+  void reconnectMqtt(WiFiClient &plain, WiFiClientSecure &secure, PubSubClient &client,
+                     const char *deviceId, void (*mqttCallback)(char *, byte *, unsigned int)) {
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println(F("MQTT: сначала нужен Wi-Fi"));
       return;
     }
     client.disconnect();
     delay(100);
-    Serial.print(F("MQTT: подключение к "));
+    Serial.print(mqttTls_ ? F("MQTTS: подключение к ") : F("MQTT: подключение к "));
     Serial.print(mqttHost_);
     Serial.print(F(":"));
     Serial.println(mqttPort_);
 
-    net.setInsecure();
+    if (mqttTls_) {
+      plain.stop();
+      secure.setInsecure();
+      client.setClient(secure);
+    } else {
+      secure.stop();
+      client.setClient(plain);
+    }
     client.setServer(mqttHost_, mqttPort_);
     client.setBufferSize(2048);
     client.setCallback(mqttCallback);
@@ -100,23 +110,24 @@ public:
     Serial.println(F("wifipass <текст>  — пароль Wi-Fi"));
     Serial.println(F("mhost <текст>     — хост MQTT (было URL)"));
     Serial.println(F("mport <число>     — порт MQTT"));
+    Serial.println(F("mtls <0|1>        — 0 MQTT без TLS, 1 MQTTS (TLS)"));
     Serial.println(F("muser <текст>     — логин MQTT"));
     Serial.println(F("mpass <текст>     — пароль MQTT"));
     Serial.println(F("default <ключ>    — сброс одного параметра к Secret.h"));
-    Serial.println(F("  ключи: ssid | wifipass | mhost | mport | muser | mpass | all"));
+    Serial.println(F("  ключи: ssid | wifipass | mhost | mport | mtls | muser | mpass | all"));
     Serial.println(F("reconnect         — переподключить Wi-Fi и MQTT по текущим значениям"));
     Serial.println(F("reboot            — перезагрузка ESP32"));
   }
 
-  void pollSerial(WiFiClientSecure &net, PubSubClient &client, const char *deviceId,
-                  void (*mqttCallback)(char *, byte *, unsigned int)) {
+  void pollSerial(WiFiClient &plain, WiFiClientSecure &secure, PubSubClient &client,
+                  const char *deviceId, void (*mqttCallback)(char *, byte *, unsigned int)) {
     while (Serial.available() > 0) {
       char c = static_cast<char>(Serial.read());
       if (c == '\r') {
         continue;
       }
       if (c == '\n') {
-        processCommandLine(serialLine_, net, client, deviceId, mqttCallback);
+        processCommandLine(serialLine_, plain, secure, client, deviceId, mqttCallback);
         serialLine_ = "";
         continue;
       }
@@ -134,6 +145,7 @@ private:
   char mqttUser_[kMqttUserMax]{};
   char mqttPass_[kMqttPassMax]{};
   uint16_t mqttPort_ = PORT;
+  bool mqttTls_{SECRET_MQTT_TLS != 0};
   String serialLine_;
 
   void printCurrentConfig() const {
@@ -146,6 +158,8 @@ private:
     Serial.println(mqttHost_);
     Serial.print(F("mport:    "));
     Serial.println(mqttPort_);
+    Serial.print(F("mtls:     "));
+    Serial.println(mqttTls_ ? F("1 (MQTTS)") : F("0 (MQTT)"));
     Serial.print(F("muser:    "));
     Serial.println(mqttUser_);
     Serial.print(F("mpass:    "));
@@ -164,8 +178,9 @@ private:
     return true;
   }
 
-  void processCommandLine(const String &lineIn, WiFiClientSecure &net, PubSubClient &client,
-                          const char *deviceId, void (*mqttCallback)(char *, byte *, unsigned int)) {
+  void processCommandLine(const String &lineIn, WiFiClient &plain, WiFiClientSecure &secure,
+                          PubSubClient &client, const char *deviceId,
+                          void (*mqttCallback)(char *, byte *, unsigned int)) {
     String line = lineIn;
     line.trim();
     if (line.length() == 0) {
@@ -188,7 +203,7 @@ private:
     }
     if (cmd.equalsIgnoreCase("reconnect")) {
       reconnectWiFi();
-      reconnectMqtt(net, client, deviceId, mqttCallback);
+      reconnectMqtt(plain, secure, client, deviceId, mqttCallback);
       return;
     }
     if (cmd.equalsIgnoreCase("reboot")) {
@@ -200,7 +215,7 @@ private:
 
     if (cmd.equalsIgnoreCase("default")) {
       if (arg.length() == 0) {
-        Serial.println(F("Укажите ключ: ssid | wifipass | mhost | mport | muser | mpass | all"));
+        Serial.println(F("Укажите ключ: ssid | wifipass | mhost | mport | mtls | muser | mpass | all"));
         return;
       }
       if (arg.equalsIgnoreCase("all")) {
@@ -217,6 +232,8 @@ private:
         prefs_.remove("mhost");
       } else if (arg.equalsIgnoreCase("mport")) {
         prefs_.remove("mport");
+      } else if (arg.equalsIgnoreCase("mtls")) {
+        prefs_.remove("mtls");
       } else if (arg.equalsIgnoreCase("muser")) {
         prefs_.remove("muser");
       } else if (arg.equalsIgnoreCase("mpass")) {
@@ -270,6 +287,15 @@ private:
       prefs_.putUInt("mport", static_cast<uint32_t>(mqttPort_));
       changed = true;
       Serial.println(F("mport сохранён в NVS"));
+    } else if (cmd.equalsIgnoreCase("mtls")) {
+      if (arg != "0" && arg != "1") {
+        Serial.println(F("Пример: mtls 0 (MQTT) или mtls 1 (MQTTS)"));
+        return;
+      }
+      mqttTls_ = (arg == "1");
+      prefs_.putBool("mtls", mqttTls_);
+      changed = true;
+      Serial.println(F("mtls сохранён в NVS"));
     } else if (cmd.equalsIgnoreCase("muser")) {
       if (!copyToBuf(arg, mqttUser_, sizeof(mqttUser_), "muser")) {
         return;

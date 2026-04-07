@@ -1,3 +1,4 @@
+#include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 
@@ -8,8 +9,9 @@
 
 const char deviceId[] = "esp32-relay-1";
 
-WiFiClientSecure net;
-PubSubClient client(net);
+WiFiClient mqttPlain;
+WiFiClientSecure mqttSecure;
+PubSubClient client(mqttPlain);
 Commutator *commutator = new Commutator();
 MqttCommandHandler mqttHandler(client, *commutator, deviceId);
 NetSettings netSettings;
@@ -25,15 +27,18 @@ void setup() {
   netSettings.printHelp();
 
   netSettings.reconnectWiFi();
-  netSettings.reconnectMqtt(net, client, deviceId, MqttCommandHandler::callbackTrampoline);
+  netSettings.reconnectMqtt(mqttPlain, mqttSecure, client, deviceId,
+                            MqttCommandHandler::callbackTrampoline);
 }
 
 void loop() {
-  netSettings.pollSerial(net, client, deviceId, MqttCommandHandler::callbackTrampoline);
+  netSettings.pollSerial(mqttPlain, mqttSecure, client, deviceId,
+                         MqttCommandHandler::callbackTrampoline);
   client.loop();
 
   if (!client.connected()) {
     Serial.println("MQTT disconnected, reconnecting...");
-    netSettings.reconnectMqtt(net, client, deviceId, MqttCommandHandler::callbackTrampoline);
+    netSettings.reconnectMqtt(mqttPlain, mqttSecure, client, deviceId,
+                              MqttCommandHandler::callbackTrampoline);
   }
 }

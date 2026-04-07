@@ -10,7 +10,7 @@ To compile, you need to create a Secret.h file in the sketch's main directory wi
 #define PORT          8883
 #define MQTT_USERNAME "MQTT_USERNAME"
 #define MQTT_PASS     "MQTT_PASSWORD"
-#define SECRET_MQTT_TLS 0
+#define SECRET_MQTT_TLS 1
 ```
 
 ## RelayWrite (closing and opening a relay with a given number)

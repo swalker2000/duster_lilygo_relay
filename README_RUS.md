@@ -10,6 +10,7 @@
 #define PORT          8883
 #define MQTT_USERNAME "MQTT_USERNAME"
 #define MQTT_PASS     "MQTT_PASSWORD"
+#define SECRET_MQTT_TLS 1ы
 ```
 
 ## RelayWrite (замыкание и размыкани реле с заданным номером)
